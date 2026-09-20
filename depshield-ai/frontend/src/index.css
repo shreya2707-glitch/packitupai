@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --canvas: #eef1f4;
+  --panel: #ffffff;
+  --ink: #0f1b2d;
+  --muted: #5a6678;
+  --rule: #d3d9e1;
+  --signal: #2447f5;
+  --critical: #c4162a;
+  --high: #e3630f;
+  --medium: #b98a00;
+  --low: #5f7d9c;
+}
+
+html, body, #root { height: 100%; }
+body { margin: 0; background: var(--canvas); color: var(--ink); font-family: "Schibsted Grotesk", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+
+:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+
+.react-flow__node { border-radius: 4px !important; }
+.react-flow__attribution { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+  .react-flow__edge.animated path { animation: none !important; }
+}

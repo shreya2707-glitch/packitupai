@@ -1,0 +1,76 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: depshield
+      POSTGRES_PASSWORD: depshield
+      POSTGRES_DB: depshield
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U depshield"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  neo4j:
+    image: neo4j:5-community
+    environment:
+      NEO4J_AUTH: neo4j/depshield-pass
+    ports: ["7474:7474", "7687:7687"]   # 7474 = Neo4j Browser for the demo
+    volumes: [neo4jdata:/data]
+
+  api:
+    build: ./backend
+    env_file: [.env]
+    environment:
+      DATABASE_URL: postgresql+psycopg2://depshield:depshield@postgres:5432/depshield
+      REDIS_URL: redis://redis:6379/0
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_PASSWORD: depshield-pass
+    ports: ["8000:8000"]
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      neo4j: {condition: service_started}
+
+  worker:
+    build: ./backend
+    command: rq worker --url redis://redis:6379/0
+    env_file: [.env]
+    environment:
+      DATABASE_URL: postgresql+psycopg2://depshield:depshield@postgres:5432/depshield
+      REDIS_URL: redis://redis:6379/0
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_PASSWORD: depshield-pass
+    depends_on: [api]
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8000
+    ports: ["8080:80"]
+    depends_on: [api]
+
+  # Optional: docker compose --profile monitoring up
+  prometheus:
+    image: prom/prometheus:latest
+    profiles: [monitoring]
+    volumes: ["./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro"]
+    ports: ["9090:9090"]
+
+  grafana:
+    image: grafana/grafana:latest
+    profiles: [monitoring]
+    ports: ["3000:3000"]
+    depends_on: [prometheus]
+
+volumes:
+  pgdata:
+  neo4jdata:

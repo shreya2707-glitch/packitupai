@@ -1,0 +1,24 @@
+# Scans this repo's own dependencies with OSV-Scanner (samples/ is excluded on purpose:
+# it holds deliberately vulnerable lockfiles for the demo). Check the latest release tag at
+# https://github.com/google/osv-scanner-action and update the pin below.
+name: Dependency scan
+on:
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "30 12 * * 1"
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  osv-scan:
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@v2.3.8
+    with:
+      scan-args: |-
+        --recursive
+        ./backend
+        ./frontend

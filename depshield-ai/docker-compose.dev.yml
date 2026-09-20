@@ -1,0 +1,8 @@
+# Only for running the backend/frontend outside Docker.
+# Publishes Postgres and Redis on localhost so uvicorn can reach them:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up postgres redis neo4j
+services:
+  postgres:
+    ports: ["127.0.0.1:5432:5432"]
+  redis:
+    ports: ["127.0.0.1:6379:6379"]
